@@ -5,6 +5,8 @@
  */
 package at.htlstp.reio.jdbc.first;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -14,6 +16,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,6 +30,8 @@ public class FirstSteps {
 
     public static void main(String[] args) {
         final String DATABASE = "reio_first_steps";
+        
+        Properties props = new Properties();
 
         String ddl = "";
         ddl += "DROP TABLE IF EXISTS persons;\n";
@@ -37,17 +42,22 @@ public class FirstSteps {
         ddl += "   CONSTRAINT fk_persons PRIMARY KEY(per_id)\n";
         ddl += ");";
 
+        // Treiber und properties laden
         try {
             // Treiber laden
             Class.forName("org.postgresql.Driver");
-        } catch (ClassNotFoundException ex) {
+            props.load(new FileInputStream("connection_props.properties"));
+        } catch (ClassNotFoundException | IOException ex) {
             Logger.getLogger(FirstSteps.class.getName()).log(Level.SEVERE, null, ex);
             System.exit(1);
         }
 
-        String jdbcurl = "jdbc:postgresql://10.128.6.5:5432/" + DATABASE;
+        String dbUrl = props.getProperty("db_url");
+        String dbUser = props.getProperty("db_user");
+        String dbPassword = props.getProperty("db_password");
+                
 
-        try ( Connection con = DriverManager.getConnection(jdbcurl, "unterricht", "unterricht")) {
+        try ( Connection con = DriverManager.getConnection(dbUrl + DATABASE, dbUser, dbPassword)) {
             System.out.println("Verbindung erfolgreich: " + DATABASE);
             System.out.println("SendDDL: " + sendDDL(con, ddl));
             //int result = insertData_1(con, "names.csv");
