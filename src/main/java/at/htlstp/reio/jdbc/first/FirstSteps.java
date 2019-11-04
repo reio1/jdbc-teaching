@@ -38,9 +38,11 @@ public class FirstSteps {
         ddl += "CREATE TABLE persons (\n";
         ddl += "   per_id INTEGER NOT NULL,\n";
         ddl += "   per_lastname VARCHAR(100),\n";
-        ddl += "   per_firstname VARCHAR(100), \n";
-        ddl += "   CONSTRAINT fk_persons PRIMARY KEY(per_id)\n";
+        ddl += "   per_firstname VARCHAR(100),\n";
+        ddl += "   CONSTRAINT pk_persons PRIMARY KEY(per_id)\n";
         ddl += ");";
+        
+        // hallo
 
         // Treiber und properties laden
         try {
@@ -75,7 +77,7 @@ public class FirstSteps {
      *
      * @param con
      * @param ddl
-     * @return 0 bei Erfolg
+     * @return true bei Erfolg
      * @throws SQLException
      */
     private static boolean sendDDL(Connection con, String ddl) throws SQLException {
