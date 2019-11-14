@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
@@ -42,13 +43,13 @@ public class FirstSteps {
         ddl += "   CONSTRAINT pk_persons PRIMARY KEY(per_id)\n";
         ddl += ");";
         
-        // hallo
 
         // Treiber und properties laden
         try {
             // Treiber laden
             Class.forName("org.postgresql.Driver");
             props.load(new FileInputStream("connection_props.properties"));
+            System.out.println("Driver and props sucessfully loaded");
         } catch (ClassNotFoundException | IOException ex) {
             Logger.getLogger(FirstSteps.class.getName()).log(Level.SEVERE, null, ex);
             System.exit(1);
@@ -62,9 +63,9 @@ public class FirstSteps {
         try ( Connection con = DriverManager.getConnection(dbUrl + DATABASE, dbUser, dbPassword)) {
             System.out.println("Verbindung erfolgreich: " + DATABASE);
             System.out.println("SendDDL: " + sendDDL(con, ddl));
-            //int result = insertData_1(con, "names.csv");
-            int result = insertData_2(con, "names.csv");
-            // result = insertData_2(con, "names.csv");
+            int result = insertData_3(con, "names.csv");
+            //int result = insertData_3(con, "names.csv");
+            result += insertData_3(con, "names.csv");
             System.out.println(result + " Datensätze erfolgreich geschrieben.");
         } catch (SQLException ex) {
             Logger.getLogger(FirstSteps.class.getName()).log(Level.SEVERE, null, ex);
@@ -107,6 +108,7 @@ public class FirstSteps {
         }
         int result = 0;
         int pk = 1;
+        
         // start always with pk = 1 - problems if we call the method twice
         try ( PreparedStatement ps = con.prepareStatement(sql)) {
             for (String l : lines) {
@@ -144,6 +146,67 @@ public class FirstSteps {
         }
         int result = 0;
         int pk = 1;
+        boolean oldCommitState = con.getAutoCommit();
+        // start always with pk = 1 - problems if we call the method twice
+        con.setAutoCommit(false);
+        try ( PreparedStatement ps = con.prepareStatement(sql)) {
+            for (String l : lines) {
+                if (!l.isBlank()) {
+                    String[] token = l.split(";");
+                    ps.setInt(1, pk++);
+                    ps.setString(2, token[0]);
+                    ps.setString(3, token[1]);
+                    result += ps.executeUpdate();
+                    ps.clearParameters();
+                }
+            }
+            con.commit();
+        } catch (Exception ex) {
+            System.out.println("Fehler: " + ex.getMessage());
+            System.out.println("Transaction rollback");
+            result = 0;
+            con.rollback();
+            //throw ex;
+        } finally {
+            con.setAutoCommit(oldCommitState);
+        }
+        return result;
+    }
+    
+    /**
+     * Schreibt die aus der Datei csvFile gelesenen Datensätze als Transaktion
+     * in die Tabelle persons. Bei einem Fehler wird die Transaktion
+     * zurückgerollt und kein Datensatz wird geschrieben.
+     * Außerdem wird der größte in der DB gespeicherte PK gelesen und 
+     * inkrementiert.
+     *
+     * @param con
+     * @param csvFile
+     * @return Anzahl der erfolgreich geschriebenen Datensätze, 0 bei Mißerfolg
+     * @throws SQLException bei einem Datenbankfehler
+     */
+    private static int insertData_3(Connection con, String csvFile) throws SQLException {
+        String sql = "INSERT INTO persons VALUES(?, ?, ?);";
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(Paths.get(csvFile));
+        } catch (IOException ex) {
+            System.out.println("Datei nicht gefunden: " + csvFile);
+            return 0;
+        }
+        int result = 0;
+        
+        
+        
+        int pk = 1;
+        String sql1 = "SELECT MAX(per_id) AS maxpk FROM persons;";
+        try(Statement s = con.createStatement()) {
+            ResultSet rs = s.executeQuery(sql1);
+            if(rs.next()) {
+                pk = rs.getInt(1);
+                pk++;
+            }
+        }
         boolean oldCommitState = con.getAutoCommit();
         // start always with pk = 1 - problems if we call the method twice
         con.setAutoCommit(false);
