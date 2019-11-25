@@ -65,7 +65,9 @@ public class FirstSteps {
             System.out.println("SendDDL: " + sendDDL(con, ddl));
             int result = insertData_3(con, "names.csv");
             //int result = insertData_3(con, "names.csv");
+            for(int i = 1; i <= 1000; i++) {
             result += insertData_3(con, "names.csv");
+            }
             System.out.println(result + " Datensätze erfolgreich geschrieben.");
         } catch (SQLException ex) {
             Logger.getLogger(FirstSteps.class.getName()).log(Level.SEVERE, null, ex);
@@ -195,9 +197,7 @@ public class FirstSteps {
             return 0;
         }
         int result = 0;
-        
-        
-        
+      
         int pk = 1;
         String sql1 = "SELECT MAX(per_id) AS maxpk FROM persons;";
         try(Statement s = con.createStatement()) {

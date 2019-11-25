@@ -1,4 +1,4 @@
-package at.htlstp.reio.jdbc.sakila;
+package at.htlstp.reio.jdbc.sakila.model;
 
 import java.util.Objects;
 
@@ -12,11 +12,12 @@ public class Actor {
     private String lastname;
 
     public Actor(String firstname, String lastname) {
+
         this(null, firstname, lastname);
     }
     
     public Actor(Integer id, String firstname, String lastname) {
-        setId(id);
+        this.setId(id);
         this.firstname = firstname;
         this.lastname = lastname;
     }

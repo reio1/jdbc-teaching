@@ -5,6 +5,9 @@
  */
 package at.htlstp.reio.jdbc.sakila;
 
+import at.htlstp.reio.jdbc.sakila.db.ISakilaDAO;
+import at.htlstp.reio.jdbc.sakila.db.SakilaDAO;
+import at.htlstp.reio.jdbc.sakila.model.Actor;
 import java.io.FileInputStream;
 import java.sql.SQLException;
 import java.util.List;
@@ -44,7 +47,7 @@ public class SakilaDAOTest {
     }
     
     @Before
-    public void setUp() throws SQLException {
+    public void setUp() {
 
     }
     
@@ -53,24 +56,23 @@ public class SakilaDAOTest {
        
     }
 
-    
     @Test
-    public void testGetFilmtitlesByActor() throws Exception {
-        System.out.println("getFilmtitlesByActor");
+    public void testGetFilmTitlesByActor() throws Exception {
+        System.out.println("getFilmTitlesByActor");
         Actor actor = new Actor("", "");
         actor.setId(2);
         List<String> result = dao.getFilmtitlesByActor(actor);
         assertEquals(25, result.size());
         assertTrue(result.contains("BABY HALL"));
     }
-    
+
     /**
      * Test if existing Actor could be read from database
-     * @throws Exception 
+     * @throws Exception SQlException possible
      */
     @Test
-    public void testfindActorById() throws Exception {
-        System.out.println("findAcorById");
+    public void testFindActorById() throws Exception {
+        System.out.println("findActorById");
         Actor actor = dao.findActorById(2);
         assertNotNull(actor);
         assertEquals("NICK", actor.getFirstname());
@@ -78,10 +80,26 @@ public class SakilaDAOTest {
     }
     
     @Test
-    public void testfindActorById2() throws Exception {
-        System.out.println("findAcorById");
+    public void testFindActorById2() throws Exception {
+        System.out.println("findActorById");
         Actor actor = dao.findActorById(2000);
         assertNull(actor);
+    }
+    
+    @Test
+    public void saveActor() throws Exception {
+        System.out.println("saveActor - success");
+        Actor actor = new Actor("Franz", "Klammer");
+        Integer id = dao.saveActor(actor);
+        assertTrue(id > 0);
+        assertTrue(id.equals(actor.getId()));
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void saveActor_1() throws Exception {
+        System.out.println("saveActor - actor has id");
+        Actor actor = new Actor(2000, "Franz", "Klammer");
+        dao.saveActor(actor);
     }
     
     

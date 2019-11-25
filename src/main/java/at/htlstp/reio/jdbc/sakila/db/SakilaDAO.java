@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package at.htlstp.reio.jdbc.sakila;
+package at.htlstp.reio.jdbc.sakila.db;
 
+import at.htlstp.reio.jdbc.sakila.model.Actor;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -90,6 +91,9 @@ public class SakilaDAO implements ISakilaDAO {
 
     @Override
     public List<String> getFilmtitlesByActor(Actor actor) throws SQLException {
+        if (!isConnected()) {
+            throw new SQLException("Not connected");
+        }
         String sql = "SELECT film.title FROM film\n";
         sql += "INNER JOIN film_actor ON film.film_id = film_actor.film_id AND film_actor.actor_id = ?;";
 
@@ -107,7 +111,10 @@ public class SakilaDAO implements ISakilaDAO {
 
     @Override
     public Actor findActorById(Integer id) throws SQLException {
-        String sql = "SELECT actor_id, first_name, last_name from actor where actor_id = ?";
+        if (!isConnected()) {
+            throw new SQLException("Not connected");
+        }
+        String sql = "SELECT actor_id, first_name, last_name from actor where actor_id = ?;";
         try ( PreparedStatement s = con.prepareStatement(sql)) {
             s.setInt(1, id);
             ResultSet rs = s.executeQuery();
@@ -120,9 +127,25 @@ public class SakilaDAO implements ISakilaDAO {
     }
 
     @Override
-    public Integer saveActor(Actor a) {
-        //TODO: implement
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public Integer saveActor(Actor a) throws SQLException {
+        if (!isConnected()) {
+            throw new SQLException("Not connected");
+        }
+        if (a.getId() != null) {
+            throw new IllegalArgumentException("saveActor() - Actor has ID: " + a.getId());
+        }
+        String sql = "INSERT INTO actor (first_name, last_name) VALUES(?, ?)\n";
+        sql += "RETURNING actor_id AS id";
+        try ( PreparedStatement s = con.prepareStatement(sql)) {
+            s.setString(1, a.getFirstname());
+            s.setString(2, a.getLastname());
+            ResultSet rs = s.executeQuery();
+            if (rs.next()) {
+                a.setId(rs.getInt(1));
+            } 
+        }
+        return a.getId();
+        
     }
 
 }
